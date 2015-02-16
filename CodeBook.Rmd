@@ -32,7 +32,7 @@ On downloading the data contained in the zip file, the following six (8) text fi
 
 
 ##Processing Steps
-In cleansing and preparing data for analysis, the process outlined in the following steps:  
+In cleansing and preparing data for analysis, the process is documented in the script run_analysis.R and outlined in the following steps:  
 
 ###Creating Clean Test and Train Data Frames  
 In Cleaning the data sets:  
@@ -100,10 +100,11 @@ Col           |  Variable Name      | Variable Description
 
 
 ### A TIDY data set was created
-The resulting combined data frame was then processed to generat a Tidy data set containing the mean data for each activity by subject
+The resulting combined data frame was then processed to generate a Tidy data set containing the mean data for each activity by subject
 
-The steps required to perform this transformation are provided in a separate R Program script entitled run_analysis.R.  
-The script is included below:  
+## Process Script
+The steps required to perform this transformation are provided in the R Program script entitled run_analysis.R.  
+The script is listed below:  
 '''{r}
 # Insert script here
 '''
