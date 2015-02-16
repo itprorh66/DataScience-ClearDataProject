@@ -1,6 +1,6 @@
 ---
 title: "Getting & Clearing Data Class Project CodeBook"
-date: "Wednesday, February 11, 2015"
+date: "Wednesday, February 18, 2015"
 output: html_document
 ---
 
