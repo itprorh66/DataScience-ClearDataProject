@@ -1,30 +1,30 @@
 ---
 title: "Getting & Clearing Data Class Project CodeBook"
-date: "Wednesday, February 18, 2015"
+date: "Wednesday, February 11, 2015"
 output: html_document
 ---
 
 ##Purpose
-The purpose of this project is to cleanse and merge data taken from the accelerometer and gyroscope sensors on a Samsung Galaxy S II smartphone worn by thirty volunteers performaing a series of tasks (Walking, Walking Upstairs, Walking Downstairs, Sitting, Standing, and Laying).  Datasets of this measurement data have been taken in two stages, a train stage and a test stage.  This project merges the data and extracts the data for the mean and standard deviation for each measurement.  Details regarding the experiment, measurement methods, and data preprocessing steps can be found at 
+The purpose of this project is to cleanse and merge data taken from the accelerometer and gyroscope sensors on a Samsung Galaxy S II smartphone worn by thirty volunteers performaing a series of tasks (Walking, Walking Upstairs, Walking Downstairs, Sitting, Standing, and Laying).  Datasets of this measurement data have been taken in two stages, a train stage and a test stage.  This project merges the data and extracts the test data for the mean and standard deviation for each measurement.  Details regarding the experiment, measurement methods, and data pre-processing steps can be found at 
 **http://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones**
 
 ##Raw Data Source
 The raw data used for this project was downloaded from **https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip**, on February 02, 2015, 10:41:45 AM.
 
 ## Input Data Files
-On downloading the data contained in the zip file, the following six (8) text files were extracted and used to process the data:
+On downloading the data contained in the zip file, the following eight (8) text files were extracted and used to process the data:
 
-* activity_labels.txt - contains the codes used to identify the six activities examined during the experimental trials.  These codes were used to assign meaningful names to variables by converting the numeric code into a trial name.
+* activity_labels.txt - contains the codes used to identify the six activities examined during the experimental trials.  These codes were used to assign meaningful names to variables by converting the numeric code into a trial task name (Walking, Walking Upstairs, Walking Downstairs, Sitting, Standing, and Laying).
 
-* features.txt - contains a list of the 561 individual test measurements made during each trial. These features were used to determine the columns of interest in this analysis
+* features.txt - contains a list of the 561 individual test measurements made during each trial. These features were used to label the columns of interest in this analysis
 
-* subject_train.txt - contains a list of the train subjects associated with each trial conducted during the training phase.  This data was used to assign a  subject field to each of the train records before merging data
+* subject_train.txt - contains a list of the train subjects associated with each trial conducted during the training phase.  This data was used to assign a subject field indicating which of six subjects performed the train trial associated with each record in the X_train.txt file.  
 
-* X_train.txt - contains the data measurements taken during each f the trials conducted during the training phase.
+* X_train.txt - contains the data measurements taken during each of the trials conducted during the training phase.  The 561 columns of this data were named using the contents of the features.txt file.  
 
-* y_train.txt - contains the order in which the activities were performed using the codes defined by in activity_labels.txt file. 
+* y_train.txt - contains the order in which the train activities were performed. Using this data an activity name was assigned to each row of the X_train.txt data. 
 
-* subject_test.txt - contains a list of the test subjects associated with each trial conducted during the testing phase. This data was used to assign a subject field to each of the test records before merging data
+* subject_test.txt - contains a list of the test subjects associated with each trial conducted during the testing phase. This data was used to assign a subject field indicating which of six subjects performed the test trial associated with each record in the X_test.txt file
 
 * X_test.txt - contains the data measurements taken during each of the trials conducted during the testing phase.
 
@@ -32,82 +32,145 @@ On downloading the data contained in the zip file, the following six (8) text fi
 
 
 ##Processing Steps
-In cleansing and preparing data for analysis, the process is documented in the script run_analysis.R and outlined in the following steps:  
+In cleansing and preparing data for analysis, the process outlined in the following steps was employed:  
 
 ###Creating Clean Test and Train Data Frames  
 In Cleaning the data sets:  
-1. The features.txt file was read in and used to label the columns of the data resulting from reading in the X_train.txt and the X_test.txt files.  This resulted in two tables each 562 columns wide (train_table and test_table).  
-2. The y_test and y_train data were read and descriptive activity names were assigned  by converting the activity code to named factor using the contents of the activity_label.txt file.  These tables were then modified to add a column name of "Activity."  
-3. The subject_test.txt and subject_train.txt files were read and the resulting tables were given a column name of "Subject."  
-4. A Train data.frame was created by performing a column bind on subject_train_table, the y_train_table, and X_train_table.  The Test data frame was similiarly formed.  
-5. The resulting data frames were then mutated to add a column entitled "Stage."  For the Train data frame this column contains the word "Train" and for the Test data frame the column contains the word "Test"
+1. The eight data files were read into the R environment and assigned names as follows:  
+  
+Item | Input File | R Data Record 
+-----|------------|--------------------  
+a. | activity.txt  | act_tab  
+b. | features.txt  | feat_tab     
+c. | subject_train.txt | sub_train 
+d. | X_train.txt | data_train  
+e. | y_train.txt | acts_train  
+f. | subject_test.txt | sub_test  
+g. | X_test.txt | data_test  
+h. | y_test.txt | acts_test
 
-At this point two data frames entitled ("test_df" and "train_df") have been created each frame has 564 columns
-
+2. The columns of data_train and data_test were labeled using the contents of feat_tab.  
+3. A train_df was formed by combining the sub_train, acts_train, and data_train tables.  
+4. The train_df was mutated to add a new column entitled Stage containing the word "Train."  
+5. A test_df was formed by combining the sub_test, acts_test, and data_test tables.    
+6. The test_df was mutated to add a new column entitled Stage containing the word "Test."  
+  
 ### Merging The Data Frames and Extracting the Mean & STD Measurements  
-The Test and Train data_frames were separately processed to extract the data related to mean and standard deviation by:  
-1.  Extracting columns containing either of the phrase "Stage", "Activity"", mean" or "std" but not the phrase "freq."  This step reduced the number of columns from 564 down to 73
-2.  The Test and Train data frames were joined to form a single data frame with 73 columns.  The following table describes the variable naming convention used: 
+The Test and Train data_frames were separately processed to create two data frames(trn_data, and test_data) which resulted from extracting important  mean and standard deviation data.  The data selected included the 8 measurments listed in the following table.  These measurements were selected because they were computed from the data collected during the original experiments and form the most comprehensive summary.  
   
-Col           |  Variable Name      | Variable Description 
---------------|---------------------|------------------------------  
-1 | Stage              | Experimental stage when measurement was taken  
-2 | Activity           | The activity being performed when measurement was taken    
-3, 4, 5 | tBodyAcc-mean()-X,Y,Z | Mean Body Acceleration measured in the Time Domain in each of the three axes (X, Y, Z) 
- 6, 7, 8 | tBodyAcc-std()-X, Y, Z | Body Acceleration Standard Deviation measured in the Time Domain in each of the three axes (X, Y, Z)  
- 9, 10, 11 | tGravityAcc-mean()-X, Y, Z | Mean Gravitational Acceleration measured in the Time Domain in each of the three axes (X, Y, Z)  
- 12, 13, 14 | tGravityAcc-std()-X, Y, Z | Gravitational Acceleration Standard Deviation measured in the Time Domain in each of the three axes (X, Y, Z) 
- 15, 16, 17 | tBodyAccJerk-mean()-X, Y, Z | Mean Body Jerk measured in the Time Domain in each of the three axes (X, Y, Z)  
- 18, 19, 20 | tBodyAccJerk-std()-X, Y, Z | Body Jerk Standard Deviation measured in the Time Domain in each of the three axes (X, Y, Z)  
- 21, 22, 23 | tBodyGyro-mean()-X, Y, Z | Mean Body Acceleration measured in the Time Domain in each of the three axes (X, Y, Z)  
- 24, 25, 26 | tBodyGyro-std()-X, Y, Z | xx 
- 27, 28, 29 | tBodyGyroJerk-mean()-X, Y, Z | xx 
- 30, 31, 32 | tBodyGyroJerk-std()-X, Y, Z | xx 
- 33 | tBodyAccMag-mean() | Mean Total Body Acceleration measured in the Time Domain    
- 34 | tBodyAccMag-std() | Standard deviation of Total Body Acceleration measured in the Time Domain 
- 35 | tGravityAccMag-mean() | xx 
- 36 | tGravityAccMag-std() | xx 
- 37 | tBodyAccJerkMag-mean() | xx 
- 38 | tBodyAccJerkMag-std() | xx 
- 39 | tBodyGyroMag-mean() | xx 
- 40 | tBodyGyroMag-std() | xx 
- 41 | tBodyGyroJerkMag-mean() | xx 
- 42 | tBodyGyroJerkMag-std() | xx 
- 43 | fBodyAcc-mean()-X, Y, Z | xx 
- 44. 45. 46| fBodyAcc-std()-X, Y, Z | xx 
- 47, 48, 49 | fBodyAccJerk-mean()-X, Y, Z | xx 
- 50, 51, 52 | fBodyAccJerk-std()-X, Y, Z | xx 
- 53, 54, 55 | fBodyGyro-mean()-X, Y, Z | xx 
- 56, 57, 58 | fBodyGyro-std()-X, Y, Z | xx 
- 59 | fBodyAccMag-mean() | xx 
- 60 | fBodyAccMag-std() | xx 
- 61 | fBodyBodyAccJerkMag-mean() | xx 
- 62 | fBodyBodyAccJerkMag-std() | xx 
- 63 | fBodyBodyGyroMag-mean() | xx 
- 64 | fBodyBodyGyroMag-std() | xx 
- 65 | fBodyBodyGyroJerkMag-mean() | xx 
- 66 | fBodyBodyGyroJerkMag-std() | xx 
- 67 | angle(tBodyAccMean,gravity) | xx 
- 68 | angle(tBodyAccJerkMean),gravityMean) | xx 
- 69 | angle(tBodyGyroMean,gravityMean) | xx 
- 70 | angle(tBodyGyroJerkMean,gravityMean) | xx 
- 71, 72, 73 | angle(X, Y, Z,gravityMean) | xx 
+Item | Input File 
+-----|------------
+1. | fBodyAccMag-mean()  
+2. | fBodyBodyAccJerkMag-mean()       
+3. | fBodyBodyGyroMag-mean()   
+4. | fBodyBodyGyroJerkMag-mean()  
+5. | fBodyAccMag-std()  
+6. | fBodyBodyAccJerkMag-std()   
+7. | fBodyBodyGyroMag-std()  
+8. | fBodyBodyGyroJerkMag-std()  
 
+The process followed to create these summary data frames included the following steps:  
+1.  Extracting columns containing the phrases "fbody", "Mag()", or "std()".   
+2.  The Test and Train data frames were then formed by combining the results of step 1 with the sub and act dataframes created during the earlier creation and cleansing step.  
   
-
-
-
-
 
 ### A TIDY data set was created
-The resulting combined data frame was then processed to generate a Tidy data set containing the mean data for each activity by subject
+The resulting combined data frame was then processed to generat a Tidy data set containing the mean data for each activity by subject
 
-## Process Script
-The steps required to perform this transformation are provided in the R Program script entitled run_analysis.R.  
-The script is listed below:  
-'''{r}
-# Insert script here
-'''
+
+### run_analysis.R Script
+The steps required to perform this transformation are provided in a separate R Program script entitled run_analysis.R.  
+The script is included below: 
+  
+  
+```{r eval=FALSE}
+require("dplyr")
+require("tidyr")
+
+#  Define the loading environment
+home_dir <- getwd()
+upper_dir <- "UCI_HAR_Dataset"
+train_dir <- "train"
+test_dir <- "test"
+
+# .... Useful Utility Functions ........
+#  Reads a table/data.frame column specified by col and
+#  greps for the tgt phrase.  If the Tgt is found add the current row number to
+#  the contents of the cell
+
+adj_names <- function(val, tgt, col) {
+     for (idx in 1:nrow(val)) {
+          k <- length(grep(tgt, val[idx,col]))
+          if (k > 0) {
+               val[idx, 2] <- paste(as.character(idx), as.character(val[idx,2]), sep="-")
+          }
+     }
+     val
+}
+
+
+# Load label files
+activity_file <- "activity_Labels.txt"
+features_file <- "features.txt"
+act_tab <- read.table(paste(home_dir, upper_dir, activity_file, sep="/"), sep=" ")
+feat_tab <- read.table(paste(home_dir, upper_dir, features_file, sep="/"), stringsAsFactors= FALSE, sep=" ")
+
+# Make Duplicate Column labels Unique by adding the row number to the label
+feat_tab <- adj_names(feat_tab, "bandsEnergy", 2)
+
+# Load training data files
+print ("Loading and cleaning train data files")
+subject_train_file <- "subject_train.txt"
+train_data_file <- "X_train.txt"
+train_acts_file <- "y_train.txt"
+sub_train <- as_data_frame(read.table(paste(home_dir, upper_dir, train_dir, subject_train_file, sep="/"), sep=""))
+acts_train <- as_data_frame(read.table(paste(home_dir, upper_dir, train_dir, train_acts_file, sep="/"), sep=""))
+train_df <- as_data_frame(read.table(paste(home_dir, upper_dir, train_dir, train_data_file, sep="/"), sep=""))
+
+colnames(train_df) <- feat_tab[,2]
+colnames(sub_train) <- "Subject"
+acts_train <- data.frame(apply(acts_train, 1, function(elm){elm <-act_tab[elm,2]}))
+colnames(acts_train) <- "Activity"
+
+# Load test data files
+print ("Loading and cleaning test data files")
+subject_test_file <- "subject_test.txt"
+test_data_file <- "X_test.txt"
+test_acts_file <-"y_test.txt"
+sub_test <- as_data_frame(read.table(paste(home_dir, upper_dir, test_dir, subject_test_file, sep="/"), sep=""))
+acts_test <- as_data_frame(read.table(paste(home_dir, upper_dir, test_dir, test_acts_file, sep="/"), sep=""))
+test_df <- as_data_frame(read.table(paste(home_dir, upper_dir, test_dir, test_data_file, sep="/"), sep=""))
+colnames(test_df) <- feat_tab[,2]
+colnames(sub_test) <- "Subject"
+acts_test <- data.frame(apply(acts_test, 1, function(elm){elm <-act_tab[elm,2]}))
+colnames(acts_test) <- "Activity"
+
+# Now Extract the mean and Std columns from test_df and train_df
+print ("Extracting Mean and Std Columns and merging data files")
+tstmn_df <- test_df %>%
+     select(contains("fbody")) %>%
+     select(contains("Mag")) %>%
+     select(contains("Mean()"))
+tststd_df <- test_df %>%
+     select(contains("fbody")) %>%
+     select(contains("Mag")) %>%
+     select(contains("std()"))
+
+tst_data <- cbind(sub_test, acts_test, tstmn_df, tststd_df)
+
+trnmn_df <- train_df %>%
+     select(contains("fbody")) %>%
+     select(contains("Mag")) %>%
+     select(contains("Mean()"))
+trnstd_df <- train_df %>%
+     select(contains("fbody")) %>%
+     select(contains("Mag")) %>%
+     select(contains("std()"))
+
+trn_data <- cbind(sub_train, acts_train, trnmn_df, trnstd_df)
+
+
+```  
 
 ##License:
 This dataset comes from experiments described in:
@@ -116,19 +179,3 @@ This dataset comes from experiments described in:
 
 This dataset is distributed AS-IS and no responsibility implied or explicit can be addressed to the authors or their institutions for its use or misuse. Any commercial use is prohibited.
 
-===========================================================================  
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r}
-summary(cars)
-```
-
-You can also embed plots, for example:
-
-```{r, echo=FALSE}
-plot(cars)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
