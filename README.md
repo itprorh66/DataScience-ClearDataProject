@@ -20,3 +20,6 @@ This project created a codebook describing the data retrieval, extraction and cl
   3. Uses descriptive activity names to name the activities in the data set.  
   4. Appropriately labels the data set with descriptive variable names. 
   5. From the data set in step 4, creates a second, independent tidy data set with the average of each variable for each activity and each subject.
+
+##Working Directory Structure  
+The run_analysis script requires that the source data be accessible from the working directory in which the script runs.  The script assumes that within the working directory there shall exist a sub-directory entitled "UCI_HAR_Dataset" and within this sub-directory there shall exist two files entilted "features.txt" and "activity_labels.txt" and two sub-sub-directories the first entitled "Train" and the second entitled "Test."  The "Train" directory shall contain the files: "X_train.txt", "subject_train.txt", and "y_train.txt."  The "Test" directory shall contain the files: "X_test.txt", "subject_test.txt", and "y_test.txt."
