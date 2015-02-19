@@ -1,14 +1,3 @@
-#  run_analysis script
-
-# You should create one R script called run_analysis.R that does the following.
-# 1. Merges the training and the test sets to create one data set.
-# 2. Extract the mean and standard deviation for each measurement.
-# 3. Uses descriptive activity names to name the activities in the data set
-# 4. Appropriately labels the data set with descriptive variable names.
-# 5. From the data set in step 4, creates a second,
-#         independent tidy data set with the average of:
-#                each variable for each activity and
-#                each subject.
 require("dplyr")
 require("tidyr")
 
@@ -18,31 +7,43 @@ upper_dir <- "UCI_HAR_Dataset"
 train_dir <- "train"
 test_dir <- "test"
 
+# .... Useful Utility Functions ........
+#  Reads a table/data.frame column specified by col and
+#  greps for the tgt phrase.  If the Tgt is found add the current row number to
+#  the contents of the cell
+
+adj_names <- function(val, tgt, col) {
+     for (idx in 1:nrow(val)) {
+          k <- length(grep(tgt, val[idx,col]))
+          if (k > 0) {
+               val[idx, 2] <- paste(as.character(idx), as.character(val[idx,2]), sep="-")
+          }
+     }
+     val
+}
 
 # Load label files
 activity_file <- "activity_Labels.txt"
 features_file <- "features.txt"
 act_tab <- read.table(paste(home_dir, upper_dir, activity_file, sep="/"), sep=" ")
-feat_tab <- read.table(paste(home_dir, upper_dir, features_file, sep="/"), sep=" ")
+feat_tab <- read.table(paste(home_dir, upper_dir, features_file, sep="/"), stringsAsFactors= FALSE, sep=" ")
 
-# Load train data files
+# Make Duplicate Column labels Unique by adding the row number to the label
+feat_tab <- adj_names(feat_tab, "bandsEnergy", 2)
+
+# Load training data files
 print ("Loading and cleaning train data files")
 subject_train_file <- "subject_train.txt"
 train_data_file <- "X_train.txt"
 train_acts_file <- "y_train.txt"
 sub_train <- as_data_frame(read.table(paste(home_dir, upper_dir, train_dir, subject_train_file, sep="/"), sep=""))
 acts_train <- as_data_frame(read.table(paste(home_dir, upper_dir, train_dir, train_acts_file, sep="/"), sep=""))
-data_train <- as_data_frame(read.table(paste(home_dir, upper_dir, train_dir, train_data_file, sep="/"), sep=""))
-colnames(data_train) <- feat_tab[,2]
-colnames(sub_train) <- "Subject"
-#Activity <- apply(acts_train, 1, function(elm){elm <-as.character(act_tab[elm,2])})
-Activity <- apply(acts_train, 1, function(elm){elm <-act_tab[elm,2]})
-# acts_train <- data.frame(Activity)
-train_tab <- cbind(sub_train, Activity, data_train)
-train_df <- as_data_frame(train_tab)
-#  Clean up by removing large data files no longer needed
-rm("sub_train", "data_train", "train_tab", "Activity")
+train_df <- as_data_frame(read.table(paste(home_dir, upper_dir, train_dir, train_data_file, sep="/"), sep=""))
 
+colnames(train_df) <- feat_tab[,2]
+colnames(sub_train) <- "Subject"
+acts_train <- data.frame(apply(acts_train, 1, function(elm){elm <-act_tab[elm,2]}))
+colnames(acts_train) <- "Activity"
 
 # Load test data files
 print ("Loading and cleaning test data files")
@@ -51,21 +52,33 @@ test_data_file <- "X_test.txt"
 test_acts_file <-"y_test.txt"
 sub_test <- as_data_frame(read.table(paste(home_dir, upper_dir, test_dir, subject_test_file, sep="/"), sep=""))
 acts_test <- as_data_frame(read.table(paste(home_dir, upper_dir, test_dir, test_acts_file, sep="/"), sep=""))
-data_test <- as_data_frame(read.table(paste(home_dir, upper_dir, test_dir, test_data_file, sep="/"), sep=""))
-colnames(data_test) <- feat_tab[,2]
+test_df <- as_data_frame(read.table(paste(home_dir, upper_dir, test_dir, test_data_file, sep="/"), sep=""))
+colnames(test_df) <- feat_tab[,2]
 colnames(sub_test) <- "Subject"
-#Activity <- apply(acts_test, 1, function(elm){elm <-as.character(act_tab[elm,2])})
-Activity <- apply(acts_test, 1, function(elm){elm <-act_tab[elm,2]})
-# acts_test <- data.frame(Activity)
-test_tab <- cbind(sub_test, Activity, data_test)
-test_df <- as_data_frame(test_tab)
-#  Clean up by removing large data files no longer needed
-rm("sub_test", "data_test", "test_tab", "Activity")
-rm("act_tab", "acts_test", "acts_train", "feat_tab")
+acts_test <- data.frame(apply(acts_test, 1, function(elm){elm <-act_tab[elm,2]}))
+colnames(acts_test) <- "Activity"
 
-## Now Extract the mean and Std columns from test_df and train_df
+# Now Extract the mean and Std columns from test_df and train_df
 print ("Extracting Mean and Std Columns and merging data files")
-## temp_df <- select(test_df, matches("mean"))
-order(c(grep("Subject", colnames(test_df)), grep("Activity",
-      colnames(test_df)),grep("mean", colnames(test_df)), grep("std",
-      colnames(test_df))))
+tstmn_df <- test_df %>%
+     select(contains("fbody")) %>%
+     select(contains("Mag")) %>%
+     select(contains("Mean()"))
+tststd_df <- test_df %>%
+     select(contains("fbody")) %>%
+     select(contains("Mag")) %>%
+     select(contains("std()"))
+
+tst_data <- cbind(sub_test, acts_test, tstmn_df, tststd_df)
+
+trnmn_df <- train_df %>%
+     select(contains("fbody")) %>%
+     select(contains("Mag")) %>%
+     select(contains("Mean()"))
+trnstd_df <- train_df %>%
+     select(contains("fbody")) %>%
+     select(contains("Mag")) %>%
+     select(contains("std()"))
+
+trn_data <- cbind(sub_train, acts_train, trnmn_df, trnstd_df)
+
